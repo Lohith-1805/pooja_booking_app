@@ -357,6 +357,7 @@ ALTER TABLE pandit_availability ENABLE ROW LEVEL SECURITY;
 
 -- Users
 CREATE POLICY "Users read own profile"   ON users FOR SELECT USING (auth.uid() = auth_id);
+CREATE POLICY "Users insert own profile" ON users FOR INSERT WITH CHECK (auth.uid() = auth_id);
 CREATE POLICY "Users update own profile" ON users FOR UPDATE USING (auth.uid() = auth_id);
 CREATE POLICY "Service role users"       ON users FOR ALL    USING (auth.role() = 'service_role');
 
