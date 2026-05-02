@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Container(
-        height: 150,
+        height: 165,
         decoration: BoxDecoration(
           gradient: AppColors.bannerGradient,
           borderRadius: BorderRadius.circular(20),

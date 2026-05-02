@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -38,18 +39,88 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
   Future<void> _verifyOtp() async {
     if (_otp.length != 6) return;
     setState(() => _isLoading = true);
+
     try {
-      await Future.delayed(const Duration(seconds: 1)); // Simulated
-      // TODO: Verify with Supabase
-      if (mounted) context.go(AppRoutes.roleSelect);
+      // Verify OTP with Supabase
+      final response = await Supabase.instance.client.auth.verifyOTP(
+        phone: widget.phone,
+        token: _otp,
+        type: OtpType.sms,
+      );
+
+      final user = response.user;
+      if (user == null) throw Exception('Verification failed');
+
+      // Check if user already has a profile in our users table
+      final existing = await Supabase.instance.client
+          .from('users')
+          .select('id, role')
+          .eq('auth_id', user.id)
+          .maybeSingle();
+
+      if (existing != null) {
+        // Returning user — navigate straight to their dashboard
+        final role = existing['role'] as String? ?? 'devotee';
+        if (mounted) _navigateByRole(role);
+      } else {
+        // New user — go to role selection to create profile
+        if (mounted) context.go(AppRoutes.roleSelect);
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid OTP. Please try again.')),
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    setState(() => _resendSeconds = 30);
+    _startResendTimer();
+    try {
+      await Supabase.instance.client.auth.signInWithOtp(phone: widget.phone);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP resent successfully')),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  void _navigateByRole(String role) {
+    switch (role) {
+      case 'pandit':
+        context.go(AppRoutes.panditHome);
+        break;
+      case 'temple_admin':
+        context.go(AppRoutes.templeAdminHome);
+        break;
+      case 'super_admin':
+        context.go(AppRoutes.superAdminHome);
+        break;
+      default:
+        context.go(AppRoutes.home);
     }
   }
 
@@ -132,10 +203,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                       style: AppTextStyles.labelMedium,
                     )
                   : TextButton(
-                      onPressed: () {
-                        setState(() => _resendSeconds = 30);
-                        _startResendTimer();
-                      },
+                      onPressed: _resendOtp,
                       child: Text('Resend OTP',
                           style: AppTextStyles.labelMedium.copyWith(
                               color: AppColors.primary,

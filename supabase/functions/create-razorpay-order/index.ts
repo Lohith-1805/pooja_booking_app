@@ -1,3 +1,7 @@
+// @ts-nocheck
+// ↑ This file runs on Deno (Supabase Edge Functions), not Node.js.
+//   VS Code's built-in TypeScript server doesn't know Deno globals (like Deno.env).
+//   @ts-nocheck tells it to skip type-checking this file — the code is correct for Deno.
 // Supabase Edge Function: create-razorpay-order
 // Deploy with: supabase functions deploy create-razorpay-order
 // Set secret:  supabase secrets set RAZORPAY_SECRET=your_secret_key_here
@@ -26,7 +30,7 @@ serve(async (req) => {
     }
 
     // Secret key is read from Supabase environment secrets — never exposed to client
-    const razorpayKeyId     = Deno.env.get("RAZORPAY_KEY_ID");
+    const razorpayKeyId = Deno.env.get("RAZORPAY_KEY_ID");
     const razorpaySecretKey = Deno.env.get("RAZORPAY_SECRET");
 
     if (!razorpayKeyId || !razorpaySecretKey) {
@@ -70,9 +74,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         order_id: order.id,
-        amount:   order.amount,
+        amount: order.amount,
         currency: order.currency,
-        receipt:  order.receipt,
+        receipt: order.receipt,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

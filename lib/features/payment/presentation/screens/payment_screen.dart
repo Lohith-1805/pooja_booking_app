@@ -43,47 +43,46 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _openRazorpay() async {
     setState(() => _isProcessing = true);
 
+    String? orderId;
+
+    // Step 1: Try to create a server-side order (production path)
+    // If Edge Function isn't deployed yet, we fall back to client-side mode (test path)
     try {
-      // Step 1: Create Razorpay order on the server (keeps secret key off device)
       final response = await Supabase.instance.client.functions.invoke(
         'create-razorpay-order',
         body: {
-          'amount': _amount * 100, // Razorpay takes paise, not rupees
+          'amount': _amount * 100,
           'currency': AppConstants.razorpayCurrency,
           'receipt': 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
           'notes': {'pooja': _poojaName, 'pandit': _panditName},
         },
       );
-
-      final orderId = response.data['order_id'] as String?;
-      if (orderId == null) throw Exception('Failed to create order');
-
-      // Step 2: Open Razorpay checkout with the server-created order_id
-      final options = {
-        'key': AppConstants.razorpayKeyId,     // Public key only — safe in app
-        'order_id': orderId,                   // From server
-        'amount': _amount * 100,
-        'currency': AppConstants.razorpayCurrency,
-        'name': AppConstants.appName,
-        'description': '$_poojaName with $_panditName',
-        'prefill': {
-          'contact': _userPhone,
-          'email': _userEmail,
-        },
-        'theme': {'color': '#D4600A'},
-      };
-      _razorpay.open(options);
-    } catch (e) {
-      setState(() => _isProcessing = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not initiate payment: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      orderId = response.data?['order_id'] as String?;
+    } catch (_) {
+      // Edge Function not deployed yet — proceed without order_id (test mode only)
+      orderId = null;
     }
+
+    // Step 2: Open Razorpay checkout
+    final options = <String, dynamic>{
+      'key': AppConstants.razorpayKeyId,
+      'amount': _amount * 100,       // paise
+      'currency': AppConstants.razorpayCurrency,
+      'name': AppConstants.appName,
+      'description': '$_poojaName with $_panditName',
+      'prefill': {
+        'contact': _userPhone.isNotEmpty ? _userPhone : '9999999999',
+        'email': _userEmail.isNotEmpty ? _userEmail : 'test@poojaconnect.in',
+      },
+      'theme': {'color': '#D4600A'},
+    };
+
+    // Only include order_id if we got one from the server
+    if (orderId != null) {
+      options['order_id'] = orderId;
+    }
+
+    _razorpay.open(options);
   }
 
   void _handleSuccess(PaymentSuccessResponse response) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -14,6 +15,7 @@ class RoleSelectScreen extends StatefulWidget {
 
 class _RoleSelectScreenState extends State<RoleSelectScreen> {
   String? _selectedRole;
+  bool _isLoading = false;
 
   final List<_RoleOption> _roles = [
     _RoleOption(
@@ -39,18 +41,54 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
     ),
   ];
 
-  void _proceed() {
+  Future<void> _proceed() async {
     if (_selectedRole == null) return;
-    switch (_selectedRole) {
-      case AppConstants.roleDevotee:
-        context.go(AppRoutes.home);
-        break;
-      case AppConstants.rolePandit:
-        context.go(AppRoutes.panditHome);
-        break;
-      case AppConstants.roleTempleAdmin:
-        context.go(AppRoutes.templeAdminHome);
-        break;
+    setState(() => _isLoading = true);
+
+    try {
+      final authUser = Supabase.instance.client.auth.currentUser;
+      if (authUser == null) throw Exception('Not authenticated');
+
+      // Save/update user profile in our users table
+      await Supabase.instance.client.from('users').upsert({
+        'auth_id': authUser.id,
+        'phone': authUser.phone ?? '',
+        'role': _selectedRole,
+        'name': '',           // User can fill in profile later
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'auth_id');
+
+      if (!mounted) return;
+
+      // Navigate to the correct dashboard
+      switch (_selectedRole) {
+        case AppConstants.roleDevotee:
+          context.go(AppRoutes.home);
+          break;
+        case AppConstants.rolePandit:
+          context.go(AppRoutes.panditHome);
+          break;
+        case AppConstants.roleTempleAdmin:
+          context.go(AppRoutes.templeAdminHome);
+          break;
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving profile: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -151,13 +189,21 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _selectedRole != null ? _proceed : null,
+                onPressed: (_selectedRole != null && !_isLoading) ? _proceed : null,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 54),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                 ),
-                child: Text('Continue', style: AppTextStyles.buttonText),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation(Colors.white)),
+                      )
+                    : Text('Continue', style: AppTextStyles.buttonText),
               ),
               const SizedBox(height: 24),
             ],

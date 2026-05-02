@@ -149,7 +149,7 @@ class _PanditsListScreenState extends State<PanditsListScreen> {
                       .copyWith(color: AppColors.textPrimary),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded,
                       size: 18, color: AppColors.textHint),
-                  items: ['All', ...AppConstants.poojaCategories.take(8)]
+                  items: AppConstants.poojaCategories.take(9).toList()
                       .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                       .toList(),
                   onChanged: (val) =>
