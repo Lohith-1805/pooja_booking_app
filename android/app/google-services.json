@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "248291658838",
+    "project_id": "pooja-booking-app-3fa14",
+    "storage_bucket": "pooja-booking-app-3fa14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:248291658838:android:904253fe9b7934c8aabff7",
+        "android_client_info": {
+          "package_name": "com.poojaplatform.pooja_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-9XuPf0svmut32Hd2zV5-czd0XixiE74"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -21,6 +22,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   int get _amount => widget.paymentArgs['amount'] as int? ?? 2750;
   String get _poojaName => widget.paymentArgs['poojaName'] as String? ?? 'Pooja';
   String get _panditName => widget.paymentArgs['panditName'] as String? ?? 'Pandit';
+  String get _userPhone => widget.paymentArgs['phone'] as String? ?? '';
+  String get _userEmail => widget.paymentArgs['email'] as String? ?? '';
 
   @override
   void initState() {
@@ -37,22 +40,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
-  void _openRazorpay() {
+  Future<void> _openRazorpay() async {
     setState(() => _isProcessing = true);
-    final options = {
-      'key': AppConstants.razorpayKeyId,
-      'amount': _amount * 100, // Razorpay takes paise
-      'name': AppConstants.appName,
-      'description': '$_poojaName with $_panditName',
-      'prefill': {'contact': '9876543210', 'email': 'devotee@example.com'},
-      'theme': {'color': '#D4600A'},
-    };
-    _razorpay.open(options);
+
+    try {
+      // Step 1: Create Razorpay order on the server (keeps secret key off device)
+      final response = await Supabase.instance.client.functions.invoke(
+        'create-razorpay-order',
+        body: {
+          'amount': _amount * 100, // Razorpay takes paise, not rupees
+          'currency': AppConstants.razorpayCurrency,
+          'receipt': 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
+          'notes': {'pooja': _poojaName, 'pandit': _panditName},
+        },
+      );
+
+      final orderId = response.data['order_id'] as String?;
+      if (orderId == null) throw Exception('Failed to create order');
+
+      // Step 2: Open Razorpay checkout with the server-created order_id
+      final options = {
+        'key': AppConstants.razorpayKeyId,     // Public key only — safe in app
+        'order_id': orderId,                   // From server
+        'amount': _amount * 100,
+        'currency': AppConstants.razorpayCurrency,
+        'name': AppConstants.appName,
+        'description': '$_poojaName with $_panditName',
+        'prefill': {
+          'contact': _userPhone,
+          'email': _userEmail,
+        },
+        'theme': {'color': '#D4600A'},
+      };
+      _razorpay.open(options);
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not initiate payment: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _handleSuccess(PaymentSuccessResponse response) {
     setState(() => _isProcessing = false);
-    context.go(AppRoutes.bookingConfirmation, extra: 'BK${DateTime.now().millisecondsSinceEpoch}');
+    // TODO: Save response.orderId, response.paymentId, response.signature to Supabase payments table
+    context.go(AppRoutes.bookingConfirmation,
+        extra: 'BK${DateTime.now().millisecondsSinceEpoch}');
   }
 
   void _handleError(PaymentFailureResponse response) {

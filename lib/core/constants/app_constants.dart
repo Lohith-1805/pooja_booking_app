@@ -5,11 +5,21 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // Supabase - Replace with your actual credentials after creating Supabase project
-  static const String supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
-  static const String supabaseAnonKey = 'YOUR_ANON_KEY';
+  static const String supabaseUrl = 'https://wtviyppiqrcthjqcsxvg.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dml5cHBpcXJjdGhqcWNzeHZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2OTA0NDgsImV4cCI6MjA5MzI2NjQ0OH0.4xuPFffJWpHtEKYXmerhL6jKiacapCsqIVjfrSiDBOs';
 
-  // Razorpay - Replace with your actual key after creating Razorpay account
-  static const String razorpayKeyId = 'rzp_test_YOUR_KEY_ID';
+  // Razorpay - TEST mode (safe to use, no real money charged)
+  // ✅ Use this for development & testing
+  // 🔴 Switch to 'rzp_live_XXXX' only when going to production
+  //
+  // To get your own test key:
+  //   1. Go to https://dashboard.razorpay.com
+  //   2. Sign up (free) → Settings → API Keys → Generate Test Key
+  //   3. Replace the key below with your rzp_test_XXXXX key
+  // ✅ PASTE YOUR rzp_test_XXXXXXXX KEY BELOW (API Key from Razorpay Dashboard)
+  // ⚠️  Secret Key must NEVER go here — store it in Supabase Edge Function env vars only
+  static const String razorpayKeyId = 'PASTE_YOUR_rzp_test_KEY_HERE';
+  static const bool razorpayTestMode = true;
   static const String razorpayCurrency = 'INR';
 
   // Pagination
