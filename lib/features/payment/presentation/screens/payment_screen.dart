@@ -41,7 +41,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
-  Future<void> _openRazorpay() async {
+  Future<void> _openRazorpay({String? method}) async {
     setState(() => _isProcessing = true);
 
     String? orderId;
@@ -81,6 +81,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Only include order_id if we got one from the server
     if (orderId != null) {
       options['order_id'] = orderId;
+    }
+
+    // Pre-select payment method if specified.
+    // Valid Razorpay method strings: 'upi', 'card', 'netbanking', 'wallet'
+    if (method != null) {
+      options['method'] = method;
     }
 
     if (!mounted) return;
@@ -176,27 +182,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 title: 'UPI / Google Pay / PhonePe',
                 subtitle: 'Instant payment via UPI apps',
                 icon: '📱',
-                onTap: _isProcessing ? null : _openRazorpay,
+                onTap: _isProcessing ? null : () => _openRazorpay(method: 'upi'),
               ),
               const SizedBox(height: 12),
               _PaymentOption(
                 title: 'Credit / Debit Card',
                 subtitle: 'Visa, Mastercard, Rupay',
                 icon: '💳',
-                onTap: _isProcessing ? null : _openRazorpay,
+                onTap: _isProcessing ? null : () => _openRazorpay(method: 'card'),
               ),
               const SizedBox(height: 12),
               _PaymentOption(
                 title: 'Net Banking',
                 subtitle: 'All major banks supported',
                 icon: '🏦',
-                onTap: _isProcessing ? null : _openRazorpay,
+                onTap: _isProcessing ? null : () => _openRazorpay(method: 'netbanking'),
               ),
               const SizedBox(height: 28),
 
               // Pay button
               ElevatedButton(
-                onPressed: _isProcessing ? null : _openRazorpay,
+                onPressed: _isProcessing ? null : () => _openRazorpay(),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(
