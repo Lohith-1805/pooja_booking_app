@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,6 +19,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
   String _otp = '';
   bool _isLoading = false;
   int _resendSeconds = 30;
+  Timer? _resendTimer;
 
   @override
   void initState() {
@@ -25,14 +27,28 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
     _startResendTimer();
   }
 
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    super.dispose();
+  }
+
   void _startResendTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
+    // Cancel any existing timer before starting a new one to prevent
+    // multiple parallel timers stacking up on each resend tap.
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() {
-        if (_resendSeconds > 0) _resendSeconds--;
+        if (_resendSeconds > 0) {
+          _resendSeconds--;
+        } else {
+          timer.cancel();
+        }
       });
-      return _resendSeconds > 0;
     });
   }
 
@@ -91,7 +107,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
 
   Future<void> _resendOtp() async {
     setState(() => _resendSeconds = 30);
-    _startResendTimer();
+    _startResendTimer(); // cancels old timer internally
     try {
       await Supabase.instance.client.auth.signInWithOtp(phone: widget.phone);
       if (mounted) {

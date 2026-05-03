@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -117,20 +118,34 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     ),
                     child: Row(
                       children: [
-                        // Country code
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 16),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                                right:
-                                    BorderSide(color: AppColors.borderLight)),
+                        // Country code picker — tapping opens the picker dialog.
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(13),
+                            bottomLeft: Radius.circular(13),
                           ),
-                          child: Text(
-                            '🇮🇳 $_selectedCode',
-                            style: AppTextStyles.bodyLarge
+                          child: CountryCodePicker(
+                            onChanged: (code) {
+                              setState(() {
+                                _selectedCode = code.dialCode ?? '+91';
+                              });
+                            },
+                            initialSelection: 'IN',
+                            favorite: const ['+91', 'IN'],
+                            showCountryOnly: false,
+                            showOnlyCountryWhenClosed: false,
+                            alignLeft: false,
+                            padding: EdgeInsets.zero,
+                            textStyle: AppTextStyles.bodyLarge
                                 .copyWith(fontWeight: FontWeight.w600),
                           ),
+                        ),
+
+                        // Divider
+                        Container(
+                          width: 1,
+                          height: 28,
+                          color: AppColors.borderLight,
                         ),
 
                         // Number input
@@ -156,8 +171,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                               if (val == null || val.isEmpty) {
                                 return 'Please enter phone number';
                               }
-                              if (val.length != 10) {
-                                return 'Enter valid 10-digit number';
+                              if (val.length < 7) {
+                                return 'Enter a valid phone number';
                               }
                               return null;
                             },

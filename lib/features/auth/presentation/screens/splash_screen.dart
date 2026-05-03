@@ -60,15 +60,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 600));
     _textController.forward();
     await Future.delayed(const Duration(milliseconds: 1500));
-    _navigate();
+    await _navigate();
   }
 
-  void _navigate() {
+  Future<void> _navigate() async {
     if (!mounted) return;
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      // TODO: Check role and navigate to appropriate shell
-      context.go(AppRoutes.home);
+      try {
+        final data = await Supabase.instance.client
+            .from('users')
+            .select('role')
+            .eq('auth_id', session.user.id)
+            .maybeSingle();
+
+        if (!mounted) return;
+
+        final role = data?['role'] as String? ?? 'devotee';
+        switch (role) {
+          case 'pandit':
+            context.go(AppRoutes.panditHome);
+            break;
+          case 'temple_admin':
+            context.go(AppRoutes.templeAdminHome);
+            break;
+          case 'super_admin':
+            context.go(AppRoutes.superAdminHome);
+            break;
+          default:
+            context.go(AppRoutes.home);
+        }
+      } catch (_) {
+        if (!mounted) return;
+        context.go(AppRoutes.onboarding);
+      }
     } else {
       context.go(AppRoutes.onboarding);
     }

@@ -112,7 +112,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           Text('Gotram', style: AppTextStyles.labelMedium),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -122,6 +122,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               child: DropdownButton<String>(
                 value: _selectedGotram,
                 isExpanded: true,
+                dropdownColor: AppColors.surface,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textHint),
                 hint: Text('Select Gotram',
                     style: AppTextStyles.bodyMedium
                         .copyWith(color: AppColors.textHint)),
@@ -138,7 +141,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           Text('Nakshatram (Birth Star)', style: AppTextStyles.labelMedium),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -148,6 +151,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               child: DropdownButton<String>(
                 value: _selectedNakshatram,
                 isExpanded: true,
+                dropdownColor: AppColors.surface,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textHint),
                 hint: Text('Select Nakshatram',
                     style: AppTextStyles.bodyMedium
                         .copyWith(color: AppColors.textHint)),

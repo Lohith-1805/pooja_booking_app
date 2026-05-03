@@ -185,95 +185,98 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBannerSection() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: Container(
-        height: 165,
-        decoration: BoxDecoration(
-          gradient: AppColors.bannerGradient,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+      child: GestureDetector(
+        onTap: () => context.go(AppRoutes.temples),
+        child: Container(
+          height: 165,
+          decoration: BoxDecoration(
+            gradient: AppColors.bannerGradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Decorative circles
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              right: 30,
-              bottom: -30,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+              Positioned(
+                right: 30,
+                bottom: -30,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.06),
+                  ),
                 ),
               ),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Book Poojas Online',
-                    style: AppTextStyles.headingLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Book Poojas Online',
+                      style: AppTextStyles.headingLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Temple Poojas & Home Poojas\nExperienced Pandits Near You',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.white.withOpacity(0.85),
-                      height: 1.5,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Temple Poojas & Home Poojas\nExperienced Pandits Near You',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withOpacity(0.85),
+                        height: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Book Now →',
+                        style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12),
+                      ),
                     ),
-                    child: Text(
-                      'Book Now →',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Diya emoji
-            const Positioned(
-              right: 20,
-              bottom: 20,
-              child: Text('🪔', style: TextStyle(fontSize: 56)),
-            ),
-          ],
+              // Diya emoji
+              const Positioned(
+                right: 20,
+                bottom: 20,
+                child: Text('🪔', style: TextStyle(fontSize: 56)),
+              ),
+            ],
+          ),
         ),
       ),
     );

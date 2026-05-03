@@ -31,12 +31,9 @@ class _PanditsListScreenState extends State<PanditsListScreen> {
           .where((p) => p.languages.contains(_selectedLanguage))
           .toList();
     }
-    if (_selectedSpecialization != 'All') {
-      result = result
-          .where((p) => p.specializations
-              .any((s) => s.contains(_selectedSpecialization)))
-          .toList();
-    }
+    // Specialization filter is not applied locally because the specializations
+    // field was removed from PanditModel (it is stored in pandit_poojas table).
+    // When connected to Supabase, filter via a join query instead.
     if (_sortBy == 'rating') {
       result.sort((a, b) => b.rating.compareTo(a.rating));
     } else if (_sortBy == 'price_low') {
@@ -46,6 +43,7 @@ class _PanditsListScreenState extends State<PanditsListScreen> {
     }
     return result;
   }
+
 
   @override
   Widget build(BuildContext context) {

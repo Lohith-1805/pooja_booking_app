@@ -107,7 +107,10 @@ class ReviewModel {
   final String id;
   final String bookingId;
   final String reviewerId;
-  final String revieweeId;
+  // The reviews table does not have a reviewee_id column.
+  // Instead it references pandit_id and temple_id (both nullable).
+  final String? panditId;
+  final String? templeId;
   final double rating;
   final String? comment;
   final DateTime createdAt;
@@ -118,7 +121,8 @@ class ReviewModel {
     required this.id,
     required this.bookingId,
     required this.reviewerId,
-    required this.revieweeId,
+    this.panditId,
+    this.templeId,
     required this.rating,
     this.comment,
     required this.createdAt,
@@ -131,7 +135,8 @@ class ReviewModel {
       id: map['id'] as String,
       bookingId: map['booking_id'] as String,
       reviewerId: map['reviewer_id'] as String,
-      revieweeId: map['reviewee_id'] as String,
+      panditId: map['pandit_id'] as String?,
+      templeId: map['temple_id'] as String?,
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       comment: map['comment'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
@@ -140,3 +145,4 @@ class ReviewModel {
     );
   }
 }
+

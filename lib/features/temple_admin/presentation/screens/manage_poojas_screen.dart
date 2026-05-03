@@ -1,7 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../temples/data/models/temple_model.dart';
+
+// TODO(pricing): This screen currently iterates over demoPoojas from pooja_master
+// and displays p.basePrice and p.durationMins — these are PLACEHOLDER base values.
+// Temple-specific pricing and duration are stored in the temple_poojas table, which
+// can differ from the master values. To fix, replace demoPoojas with a Supabase
+// join query:
+//   supabase.from('temple_poojas')
+//     .select('price, duration_mins, pooja_master(name_en, name_te)')
+//     .eq('temple_id', currentTempleId)
+// Then display temple_poojas.price and temple_poojas.duration_mins.
+
 class ManagePoojasScreen extends StatelessWidget {
   const ManagePoojasScreen({super.key});
   @override
@@ -25,7 +36,8 @@ class ManagePoojasScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(p.nameEn, style: AppTextStyles.labelLarge),
-                Text("${p.durationMins} mins · ₹${p.basePrice}", style: AppTextStyles.bodySmall),
+                // NOTE: Showing placeholder base price — see TODO above for correct fix.
+                Text("${p.durationMins} mins · ₹${p.basePrice} (base)", style: AppTextStyles.bodySmall),
               ])),
               IconButton(icon: const Icon(Icons.edit_rounded, color: AppColors.primary), onPressed: () {}),
               Switch(value: true, onChanged: (v) {}, activeColor: AppColors.success),
@@ -34,3 +46,4 @@ class ManagePoojasScreen extends StatelessWidget {
     );
   }
 }
+

@@ -18,7 +18,7 @@ class AppConstants {
   //   3. Replace the key below with your rzp_test_XXXXX key
   // ✅ PASTE YOUR rzp_test_XXXXXXXX KEY BELOW (API Key from Razorpay Dashboard)
   // ⚠️  Secret Key must NEVER go here — store it in Supabase Edge Function env vars only
-  static const String razorpayKeyId = 'PASTE_YOUR_rzp_test_KEY_HERE';
+  static const String razorpayKeyId = 'rzp_test_SkOB0hg7tBC2p9';
   static const bool razorpayTestMode = true;
   static const String razorpayCurrency = 'INR';
 

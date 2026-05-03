@@ -18,6 +18,7 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   late Razorpay _razorpay;
   bool _isProcessing = false;
+  bool _paymentComplete = false;
 
   int get _amount => widget.paymentArgs['amount'] as int? ?? 2750;
   String get _poojaName => widget.paymentArgs['poojaName'] as String? ?? 'Pooja';
@@ -82,12 +83,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
       options['order_id'] = orderId;
     }
 
+    if (!mounted) return;
     _razorpay.open(options);
   }
 
   void _handleSuccess(PaymentSuccessResponse response) {
-    setState(() => _isProcessing = false);
+    if (!mounted) return;
+    setState(() {
+      _isProcessing = false;
+      _paymentComplete = true;
+    });
     // TODO: Save response.orderId, response.paymentId, response.signature to Supabase payments table
+    // context.go replaces the entire route stack so the user cannot go back to the payment screen.
     context.go(AppRoutes.bookingConfirmation,
         extra: 'BK${DateTime.now().millisecondsSinceEpoch}');
   }
@@ -106,133 +113,140 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Payment')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Amount display
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Text('🪔', style: TextStyle(fontSize: 44)),
-                  const SizedBox(height: 14),
-                  Text(_poojaName,
-                      style: AppTextStyles.headingMedium
-                          .copyWith(color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text('with $_panditName',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: Colors.white70)),
-                  const SizedBox(height: 20),
-                  Text(
-                    '₹$_amount',
-                    style: AppTextStyles.priceLarge.copyWith(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.w800),
-                  ),
-                  Text('Total Amount',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: Colors.white70)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            // Payment methods
-            Text('Choose Payment Method',
-                style: AppTextStyles.headingSmall),
-            const SizedBox(height: 16),
-
-            _PaymentOption(
-              title: 'UPI / Google Pay / PhonePe',
-              subtitle: 'Instant payment via UPI apps',
-              icon: '📱',
-              onTap: _openRazorpay,
-            ),
-            const SizedBox(height: 12),
-            _PaymentOption(
-              title: 'Credit / Debit Card',
-              subtitle: 'Visa, Mastercard, Rupay',
-              icon: '💳',
-              onTap: _openRazorpay,
-            ),
-            const SizedBox(height: 12),
-            _PaymentOption(
-              title: 'Net Banking',
-              subtitle: 'All major banks supported',
-              icon: '🏦',
-              onTap: _openRazorpay,
-            ),
-            const SizedBox(height: 28),
-
-            // Pay button
-            ElevatedButton(
-              onPressed: _isProcessing ? null : _openRazorpay,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-              child: _isProcessing
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation(Colors.white)),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.lock_rounded, size: 18),
-                        const SizedBox(width: 8),
-                        Text('Pay ₹$_amount Securely',
-                            style: AppTextStyles.buttonText),
-                      ],
+    return PopScope(
+      // Block back navigation once payment is complete to prevent re-payment.
+      canPop: !_paymentComplete,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('Payment')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Amount display
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.security_rounded,
-                    size: 14, color: AppColors.success),
-                const SizedBox(width: 5),
-                Text('256-bit SSL encrypted payment',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.success)),
-              ],
-            ),
-            const SizedBox(height: 40),
-          ],
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Text('🪔', style: TextStyle(fontSize: 44)),
+                    const SizedBox(height: 14),
+                    Text(_poojaName,
+                        style: AppTextStyles.headingMedium
+                            .copyWith(color: Colors.white)),
+                    const SizedBox(height: 4),
+                    Text('with $_panditName',
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: Colors.white70)),
+                    const SizedBox(height: 20),
+                    Text(
+                      '₹$_amount',
+                      style: AppTextStyles.priceLarge.copyWith(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    Text('Total Amount',
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: Colors.white70)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Payment methods
+              Text('Choose Payment Method',
+                  style: AppTextStyles.headingSmall),
+              const SizedBox(height: 16),
+
+              // Each option passes the _isProcessing guard so users cannot
+              // trigger a second Razorpay session while one is already open.
+              _PaymentOption(
+                title: 'UPI / Google Pay / PhonePe',
+                subtitle: 'Instant payment via UPI apps',
+                icon: '📱',
+                onTap: _isProcessing ? null : _openRazorpay,
+              ),
+              const SizedBox(height: 12),
+              _PaymentOption(
+                title: 'Credit / Debit Card',
+                subtitle: 'Visa, Mastercard, Rupay',
+                icon: '💳',
+                onTap: _isProcessing ? null : _openRazorpay,
+              ),
+              const SizedBox(height: 12),
+              _PaymentOption(
+                title: 'Net Banking',
+                subtitle: 'All major banks supported',
+                icon: '🏦',
+                onTap: _isProcessing ? null : _openRazorpay,
+              ),
+              const SizedBox(height: 28),
+
+              // Pay button
+              ElevatedButton(
+                onPressed: _isProcessing ? null : _openRazorpay,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                child: _isProcessing
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation(Colors.white)),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lock_rounded, size: 18),
+                          const SizedBox(width: 8),
+                          Text('Pay ₹$_amount Securely',
+                              style: AppTextStyles.buttonText),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.security_rounded,
+                      size: 14, color: AppColors.success),
+                  const SizedBox(width: 5),
+                  Text('256-bit SSL encrypted payment',
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: AppColors.success)),
+                ],
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+
 class _PaymentOption extends StatelessWidget {
   final String title;
   final String subtitle;
   final String icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _PaymentOption({
     required this.title,
@@ -240,6 +254,7 @@ class _PaymentOption extends StatelessWidget {
     required this.icon,
     required this.onTap,
   });
+
 
   @override
   Widget build(BuildContext context) {

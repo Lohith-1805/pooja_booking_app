@@ -1,16 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../data/models/pandit_model.dart';
-import '../../../temples/data/models/temple_model.dart';
 
-class PanditDetailScreen extends StatelessWidget {
+class PanditDetailScreen extends StatefulWidget {
   final String id;
   const PanditDetailScreen({super.key, required this.id});
 
-  PanditModel? get _pandit => demoPandits.where((p) => p.id == id).firstOrNull;
+  @override
+  State<PanditDetailScreen> createState() => _PanditDetailScreenState();
+}
+
+class _PanditDetailScreenState extends State<PanditDetailScreen> {
+  PanditModel? _pandit;
+  // Specializations are fetched from pandit_poojas joined with pooja_master,
+  // because the `specializations TEXT[]` column was removed from the schema.
+  List<String> _specializations = [];
+  bool _loadingSpecs = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _pandit = demoPandits.where((p) => p.id == widget.id).firstOrNull;
+    _fetchSpecializations();
+  }
+
+  Future<void> _fetchSpecializations() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from('pandit_poojas')
+          .select('pooja_master(name_en)')
+          .eq('pandit_id', widget.id);
+
+      final specs = (rows as List<dynamic>).map((row) {
+        final master = row['pooja_master'] as Map<String, dynamic>?;
+        return master?['name_en'] as String? ?? '';
+      }).where((s) => s.isNotEmpty).toList();
+
+      if (mounted) {
+        setState(() {
+          _specializations = specs;
+          _loadingSpecs = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingSpecs = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,45 +171,54 @@ class PanditDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Specializations
+                  // Specializations — fetched from pandit_poojas join pooja_master
                   Text('Specializations', style: AppTextStyles.headingSmall),
                   const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: pandit.specializations.map((spec) {
-                      final pooja = demoPoojas
-                          .where((p) => p.nameEn.contains(spec.split(' ').first))
-                          .firstOrNull;
-                      return GestureDetector(
-                        onTap: () {
-                          // Book this pandit for this pooja
-                          context.push(AppRoutes.bookingFlow, extra: {
-                            'panditId': pandit.id,
-                            'panditName': pandit.name,
-                            'poojaId': pooja?.id,
-                            'poojaName': spec,
-                            'basePrice': pandit.basePrice,
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryExtraLight,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Text(
-                            spec,
-                            style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  _loadingSpecs
+                      ? const SizedBox(
+                          height: 36,
+                          child: Center(
+                              child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2),
+                          )))
+                      : _specializations.isEmpty
+                          ? Text('No specializations listed.',
+                              style: AppTextStyles.bodySmall)
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _specializations.map((spec) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    context.push(AppRoutes.bookingFlow, extra: {
+                                      'panditId': pandit.id,
+                                      'panditName': pandit.name,
+                                      'poojaName': spec,
+                                      'basePrice': pandit.basePrice,
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryExtraLight,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border:
+                                          Border.all(color: AppColors.border),
+                                    ),
+                                    child: Text(
+                                      spec,
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                   const SizedBox(height: 20),
 
                   // Languages

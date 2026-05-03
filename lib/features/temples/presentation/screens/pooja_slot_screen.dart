@@ -4,11 +4,17 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
-import '../../data/models/temple_model.dart';
 
 class PoojaSlotScreen extends StatefulWidget {
   final String templeId;
-  const PoojaSlotScreen({super.key, required this.templeId});
+  final String poojaId;
+  final String poojaName;
+  const PoojaSlotScreen({
+    super.key,
+    required this.templeId,
+    required this.poojaId,
+    required this.poojaName,
+  });
 
   @override
   State<PoojaSlotScreen> createState() => _PoojaSlotScreenState();
@@ -29,7 +35,9 @@ class _PoojaSlotScreenState extends State<PoojaSlotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Book Pooja at Home')),
+      appBar:  AppBar(title: Text(widget.poojaName.isNotEmpty
+              ? 'Book: ${widget.poojaName}'
+              : 'Book Pooja at Temple')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -102,25 +110,7 @@ class _PoojaSlotScreenState extends State<PoojaSlotScreen> {
                   )),
               const SizedBox(height: 24),
 
-              // Pooja details fields
-              Text('Enter Pooja Details',
-                  style: AppTextStyles.headingSmall),
-              const SizedBox(height: 14),
-              _DropdownField(
-                hint: 'Select Gotram',
-                icon: Icons.family_restroom_rounded,
-              ),
-              const SizedBox(height: 12),
-              _DropdownField(
-                hint: 'Select Nakshatram',
-                icon: Icons.star_rounded,
-              ),
-              const SizedBox(height: 12),
-              _DropdownField(
-                hint: 'Enter Address',
-                icon: Icons.location_on_rounded,
-              ),
-              const SizedBox(height: 28),
+
 
               ElevatedButton(
                 onPressed: _selectedSlot == null
@@ -129,6 +119,8 @@ class _PoojaSlotScreenState extends State<PoojaSlotScreen> {
                         context.push(AppRoutes.bookingFlow, extra: {
                           'bookingType': 'temple',
                           'templeId': widget.templeId,
+                          'poojaId': widget.poojaId,
+                          'poojaName': widget.poojaName,
                           'date': _selectedDay.toIso8601String(),
                           'slot': _selectedSlot,
                         });
@@ -201,32 +193,3 @@ class _SlotTile extends StatelessWidget {
   }
 }
 
-class _DropdownField extends StatelessWidget {
-  final String hint;
-  final IconData icon;
-
-  const _DropdownField({required this.hint, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(hint, style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textHint)),
-          const Spacer(),
-          const Icon(Icons.keyboard_arrow_down_rounded,
-              color: AppColors.textHint),
-        ],
-      ),
-    );
-  }
-}

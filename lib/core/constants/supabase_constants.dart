@@ -1,10 +1,12 @@
-// Supabase table names
+// Supabase table names — must match the schema in assets/data/supabase_schema.sql
 class Tables {
   static const String users = 'users';
   static const String pandits = 'pandits';
-  static const String panditSpecializations = 'pandit_specializations';
+  // 'pandit_specializations' was renamed — the join table is pandit_poojas
+  static const String panditPoojas = 'pandit_poojas';
   static const String temples = 'temples';
-  static const String poojas = 'poojas';
+  // Schema table is pooja_master (not 'poojas')
+  static const String poojas = 'pooja_master';
   static const String templeSlots = 'temple_slots';
   static const String panditAvailability = 'pandit_availability';
   static const String bookings = 'bookings';
@@ -12,7 +14,8 @@ class Tables {
   static const String reviews = 'reviews';
   static const String notifications = 'notifications';
   static const String banners = 'banners';
-  static const String festivalEvents = 'festival_events';
+  // festivalEvents ('festival_events') does not exist in the schema — do not use in queries.
+  // static const String festivalEvents = 'festival_events';
 }
 
 // Storage bucket names

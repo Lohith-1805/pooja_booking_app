@@ -5,7 +5,10 @@ class PanditModel {
   final String? bio;
   final int experienceYears;
   final List<String> languages;
-  final List<String> specializations;
+  // specializations removed: the schema stores pandit↔pooja relations in the
+  // pandit_poojas join table, not as a TEXT[] column on pandits.
+  // Fetch via: supabase.from('pandit_poojas').select('pooja_master(name_en)')
+  //            .eq('pandit_id', panditId)
   final double rating;
   final int totalReviews;
   final bool isVerified;
@@ -24,7 +27,6 @@ class PanditModel {
     this.bio,
     required this.experienceYears,
     required this.languages,
-    required this.specializations,
     required this.rating,
     required this.totalReviews,
     required this.isVerified,
@@ -45,7 +47,7 @@ class PanditModel {
       bio: map['bio'] as String?,
       experienceYears: (map['experience_years'] as num?)?.toInt() ?? 0,
       languages: List<String>.from(map['languages'] ?? []),
-      specializations: List<String>.from(map['specializations'] ?? []),
+      // specializations column removed from schema — do not read it here.
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       totalReviews: (map['total_reviews'] as num?)?.toInt() ?? 0,
       isVerified: map['is_verified'] as bool? ?? false,
@@ -67,7 +69,6 @@ class PanditModel {
       'bio': bio,
       'experience_years': experienceYears,
       'languages': languages,
-      'specializations': specializations,
       'rating': rating,
       'total_reviews': totalReviews,
       'is_verified': isVerified,
@@ -82,7 +83,8 @@ class PanditModel {
   }
 }
 
-// Demo/seed data for pandits
+// Demo/seed data for pandits — specializations removed from constructor.
+// To display specializations, join pandit_poojas with pooja_master via Supabase.
 List<PanditModel> get demoPandits => [
       PanditModel(
         id: 'p1',
@@ -91,7 +93,6 @@ List<PanditModel> get demoPandits => [
         bio: 'Expert in Vedic rituals with over 20 years of experience. Specializes in Satyanarayana Puja and marriage ceremonies.',
         experienceYears: 20,
         languages: ['Telugu', 'Sanskrit', 'Hindi'],
-        specializations: ['Satyanarayana Puja', 'Vivah', 'Griha Pravesh'],
         rating: 4.8,
         totalReviews: 312,
         isVerified: true,
@@ -110,7 +111,6 @@ List<PanditModel> get demoPandits => [
         bio: 'Specialist in Griha Pravesh, Vastu Shaanti and Navagraha Homam. Fluent in Telugu and Sanskrit.',
         experienceYears: 15,
         languages: ['Telugu', 'Sanskrit'],
-        specializations: ['Griha Pravesh', 'Navagraha Homam', 'Vastu Shaanti'],
         rating: 4.7,
         totalReviews: 198,
         isVerified: true,
@@ -129,7 +129,6 @@ List<PanditModel> get demoPandits => [
         bio: 'Wedding specialist with expertise in traditional Telugu and Tamil ceremonies. 18 years of experience.',
         experienceYears: 18,
         languages: ['Telugu', 'Sanskrit', 'Tamil'],
-        specializations: ['Vivah', 'Upanayanam', 'Annaprasanna', 'Namkaran'],
         rating: 4.9,
         totalReviews: 421,
         isVerified: true,
@@ -148,7 +147,6 @@ List<PanditModel> get demoPandits => [
         bio: 'Expert in Rudrabhishek and Shiva-related poojas. Trained at Kashi with traditional Vedic knowledge.',
         experienceYears: 25,
         languages: ['Telugu', 'Sanskrit', 'Hindi'],
-        specializations: ['Rudrabhishek', 'Maha Mrityunjaya', 'Lakshmi Puja'],
         rating: 4.6,
         totalReviews: 267,
         isVerified: true,
@@ -167,7 +165,6 @@ List<PanditModel> get demoPandits => [
         bio: 'Young and dynamic pandit specialized in modern-style traditional ceremonies. Available for all occasions.',
         experienceYears: 8,
         languages: ['Telugu', 'Sanskrit'],
-        specializations: ['Satyanarayana Puja', 'Ganesh Puja', 'Lakshmi Puja'],
         rating: 4.5,
         totalReviews: 89,
         isVerified: true,

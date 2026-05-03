@@ -121,8 +121,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'slot',
-                    builder: (context, state) =>
-                        PoojaSlotScreen(templeId: state.pathParameters['id']!),
+                    builder: (context, state) {
+                      final extra =
+                          state.extra as Map<String, dynamic>? ?? {};
+                      return PoojaSlotScreen(
+                        templeId: state.pathParameters['id']!,
+                        poojaId: extra['poojaId'] as String? ?? '',
+                        poojaName: extra['poojaName'] as String? ?? '',
+                      );
+                    },
                   ),
                 ],
               ),
