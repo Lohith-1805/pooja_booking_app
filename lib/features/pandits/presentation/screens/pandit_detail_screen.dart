@@ -1,6 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -68,7 +71,7 @@ class _PanditDetailScreenState extends State<PanditDetailScreen> {
         slivers: [
           // Hero header
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 250,
             pinned: true,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -77,51 +80,96 @@ class _PanditDetailScreenState extends State<PanditDetailScreen> {
                 decoration: const BoxDecoration(
                   gradient: AppColors.sacredGradient,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                child: Stack(
                   children: [
-                    Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.4), width: 3),
-                      ),
-                      child: Center(
-                        child: Text(
-                          pandit.name.isNotEmpty ? pandit.name[0] : 'P',
-                          style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          pandit.name,
-                          style: AppTextStyles.headingMedium
-                              .copyWith(color: Colors.white),
+                        const SizedBox(height: 30),
+                        Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.4), width: 3),
+                          ),
+                          child: Center(
+                            child: Text(
+                              pandit.name.isNotEmpty ? pandit.name[0] : 'P',
+                              style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                            ),
+                          ),
                         ),
-                        if (pandit.isVerified) ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.verified_rounded,
-                              color: Colors.white, size: 18),
-                        ],
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              pandit.name,
+                              style: AppTextStyles.headingMedium
+                                  .copyWith(color: Colors.white),
+                            ),
+                            if (pandit.isVerified) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.verified_rounded,
+                                  color: Colors.white, size: 18),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${pandit.experienceYears}+ Years Experience',
+                          style: AppTextStyles.bodySmall
+                              .copyWith(color: Colors.white.withOpacity(0.8)),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${pandit.experienceYears}+ Years Experience',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: Colors.white.withOpacity(0.8)),
+                    // Glassmorphic Info Bar
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0x33FFFFFF),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star_rounded, color: AppColors.goldenLight, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    pandit.rating.toStringAsFixed(1),
+                                    style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(width: 1, height: 12, color: Colors.white.withOpacity(0.4)),
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.translate_rounded, color: Colors.white70, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${pandit.languages.length} Languages',
+                                    style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -269,17 +317,17 @@ class _PanditDetailScreenState extends State<PanditDetailScreen> {
                   // Reviews section (demo)
                   Text('Recent Reviews', style: AppTextStyles.headingSmall),
                   const SizedBox(height: 12),
-                  _DemoReviewTile(
+                  const _DemoReviewTile(
                     name: 'Priya Sharma',
                     rating: 5.0,
                     comment: 'Excellent pandit! Very knowledgeable and performed the puja with great devotion.',
-                  ),
-                  const SizedBox(height: 8),
-                  _DemoReviewTile(
+                  ).animate().fadeIn(delay: const Duration(milliseconds: 100)).slideX(begin: 0.3),
+                  const SizedBox(height: 12),
+                  const _DemoReviewTile(
                     name: 'Ravi Kumar',
                     rating: 4.5,
                     comment: 'Very punctual and professional. Explained every step of the puja clearly.',
-                  ),
+                  ).animate().fadeIn(delay: const Duration(milliseconds: 200)).slideX(begin: 0.3),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -317,22 +365,7 @@ class _PanditDetailScreenState extends State<PanditDetailScreen> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.push(AppRoutes.bookingFlow, extra: {
-                      'panditId': pandit.id,
-                      'panditName': pandit.name,
-                      'basePrice': pandit.basePrice,
-                      'bookingType': 'home',
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Text('Book Now'),
-                ),
+                child: _AnimatedBookingButton(pandit: pandit),
               ),
             ],
           ),
@@ -342,7 +375,79 @@ class _PanditDetailScreenState extends State<PanditDetailScreen> {
   }
 }
 
-class _StatBox extends StatelessWidget {
+class _AnimatedBookingButton extends StatefulWidget {
+  final PanditModel pandit;
+  const _AnimatedBookingButton({required this.pandit});
+
+  @override
+  State<_AnimatedBookingButton> createState() => _AnimatedBookingButtonState();
+}
+
+class _AnimatedBookingButtonState extends State<_AnimatedBookingButton> with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      lowerBound: 0.0,
+      upperBound: 0.04,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _scaleController.forward(),
+      onTapUp: (_) {
+        _scaleController.reverse();
+        HapticFeedback.lightImpact();
+        context.push(AppRoutes.bookingFlow, extra: {
+          'panditId': widget.pandit.id,
+          'panditName': widget.pandit.name,
+          'basePrice': widget.pandit.basePrice,
+          'bookingType': 'home',
+        });
+      },
+      onTapCancel: () => _scaleController.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleController,
+        builder: (context, child) => Transform.scale(
+          scale: 1.0 - _scaleController.value,
+          child: child,
+        ),
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text('Book Now', style: AppTextStyles.buttonText),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _StatBox extends StatefulWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -356,23 +461,75 @@ class _StatBox extends StatelessWidget {
   });
 
   @override
+  State<_StatBox> createState() => _StatBoxState();
+}
+
+class _StatBoxState extends State<_StatBox> {
+  double _targetValue = 0.0;
+  String _suffix = '';
+  bool _isDecimal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _parseValue();
+  }
+
+  void _parseValue() {
+    final match = RegExp(r'^([\d.]+)(.*)$').firstMatch(widget.value);
+    if (match != null) {
+      _targetValue = double.tryParse(match.group(1) ?? '0') ?? 0.0;
+      _suffix = match.group(2) ?? '';
+      _isDecimal = widget.value.contains('.');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final disableAnim = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: widget.color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: widget.color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: widget.color.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 22),
+          Icon(widget.icon, color: widget.color, size: 22),
           const SizedBox(height: 6),
-          Text(value,
-              style: AppTextStyles.headingSmall
-                  .copyWith(color: color, fontSize: 18)),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: _targetValue),
+            duration: disableAnim ? Duration.zero : const Duration(milliseconds: 1200),
+            curve: Curves.easeOutCubic,
+            builder: (context, val, child) {
+              String formattedVal;
+              if (_isDecimal) {
+                formattedVal = val.toStringAsFixed(1);
+              } else {
+                formattedVal = val.toInt().toString();
+              }
+              return Text(
+                '$formattedVal$_suffix',
+                style: AppTextStyles.headingSmall.copyWith(color: widget.color, fontSize: 18),
+              );
+            },
+          ),
           const SizedBox(height: 3),
-          Text(label, style: AppTextStyles.labelSmall),
+          Text(widget.label, style: AppTextStyles.labelSmall),
         ],
       ),
     );
@@ -398,6 +555,18 @@ class _DemoReviewTile extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -72,6 +72,41 @@ class AppRoutes {
   static const String superAdminHome = '/super-admin/home';
 }
 
+// Custom transition builder for push routes
+CustomTransitionPage<void> _buildSlideUpTransition(Widget child, LocalKey? key) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final slideAnim = Tween<Offset>(
+        begin: const Offset(0, 0.05), // Slight slide up (approx 40px visually)
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      ));
+
+      final fadeAnim = Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInCubic,
+      ));
+
+      return FadeTransition(
+        opacity: fadeAnim,
+        child: SlideTransition(
+          position: slideAnim,
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
@@ -116,18 +151,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: ':id',
-                builder: (context, state) =>
-                    TempleDetailScreen(id: state.pathParameters['id']!),
+                pageBuilder: (context, state) => _buildSlideUpTransition(
+                  TempleDetailScreen(id: state.pathParameters['id']!),
+                  state.pageKey,
+                ),
                 routes: [
                   GoRoute(
                     path: 'slot',
-                    builder: (context, state) {
-                      final extra =
-                          state.extra as Map<String, dynamic>? ?? {};
-                      return PoojaSlotScreen(
-                        templeId: state.pathParameters['id']!,
-                        poojaId: extra['poojaId'] as String? ?? '',
-                        poojaName: extra['poojaName'] as String? ?? '',
+                    pageBuilder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>? ?? {};
+                      return _buildSlideUpTransition(
+                        PoojaSlotScreen(
+                          templeId: state.pathParameters['id']!,
+                          poojaId: extra['poojaId'] as String? ?? '',
+                          poojaName: extra['poojaName'] as String? ?? '',
+                        ),
+                        state.pageKey,
                       );
                     },
                   ),
@@ -141,8 +180,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: ':id',
-                builder: (context, state) =>
-                    PanditDetailScreen(id: state.pathParameters['id']!),
+                pageBuilder: (context, state) => _buildSlideUpTransition(
+                  PanditDetailScreen(id: state.pathParameters['id']!),
+                  state.pageKey,
+                ),
               ),
             ],
           ),
@@ -160,32 +201,47 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Booking flow (outside shell)
       GoRoute(
         path: AppRoutes.bookingFlow,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final args = state.extra as Map<String, dynamic>?;
-          return BookingFlowScreen(bookingArgs: args ?? {});
+          return _buildSlideUpTransition(
+            BookingFlowScreen(bookingArgs: args ?? {}),
+            state.pageKey,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.payment,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final args = state.extra as Map<String, dynamic>?;
-          return PaymentScreen(paymentArgs: args ?? {});
+          return _buildSlideUpTransition(
+            PaymentScreen(paymentArgs: args ?? {}),
+            state.pageKey,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.bookingConfirmation,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final bookingId = state.extra as String? ?? '';
-          return BookingConfirmationScreen(bookingId: bookingId);
+          return _buildSlideUpTransition(
+            BookingConfirmationScreen(bookingId: bookingId),
+            state.pageKey,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.editProfile,
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) => _buildSlideUpTransition(
+          const EditProfileScreen(),
+          state.pageKey,
+        ),
       ),
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => _buildSlideUpTransition(
+          const NotificationsScreen(),
+          state.pageKey,
+        ),
       ),
 
       // Pandit Shell

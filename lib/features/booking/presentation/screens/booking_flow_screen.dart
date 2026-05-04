@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -56,18 +57,45 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         ),
       ),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final isStep2 = child.key == const ValueKey('step2');
+          final slideAnim = Tween<Offset>(
+            begin: Offset(0, isStep2 ? 0.05 : -0.05),
+            end: Offset.zero,
+          ).animate(animation);
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: slideAnim,
+              child: child,
+            ),
+          );
+        },
         child: _step == 0 ? _buildStep1() : _buildStep2(),
       ),
     );
   }
 
   Widget _buildProgressBar() {
-    return LinearProgressIndicator(
-      value: (_step + 1) / 2,
-      backgroundColor: AppColors.borderLight,
-      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-      minHeight: 4,
+    final disableAnim = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+    final targetValue = (_step + 1) / 2;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.5, end: targetValue),
+      duration: disableAnim ? Duration.zero : const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) {
+        return LinearProgressIndicator(
+          value: value,
+          backgroundColor: AppColors.borderLight,
+          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+          minHeight: 4,
+        );
+      },
     );
   }
 
@@ -84,6 +112,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -131,7 +166,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 items: AppConstants.gotrams
                     .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                     .toList(),
-                onChanged: (val) => setState(() => _selectedGotram = val),
+                onChanged: (val) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedGotram = val);
+                },
               ),
             ),
           ),
@@ -160,8 +198,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 items: AppConstants.nakshatrams
                     .map((n) => DropdownMenuItem(value: n, child: Text(n)))
                     .toList(),
-                onChanged: (val) =>
-                    setState(() => _selectedNakshatram = val),
+                onChanged: (val) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedNakshatram = val);
+                },
               ),
             ),
           ),
@@ -201,14 +241,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           ),
           const SizedBox(height: 32),
 
-          ElevatedButton(
-            onPressed: () => setState(() => _step = 1),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 52),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            child: Text('Continue', style: AppTextStyles.buttonText),
+          _AnimatedActionButton(
+            label: 'Continue',
+            onTap: () => setState(() => _step = 1),
           ),
           const SizedBox(height: 40),
         ],
@@ -226,124 +261,134 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           Text('Booking Summary', style: AppTextStyles.headingMedium),
           const SizedBox(height: 20),
 
-          // Summary card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+          // Summary card with 3D tilt
+          Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateX(-0.02),
+            alignment: Alignment.center,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFFFF8F0)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with lotus
-                Row(
-                  children: [
-                    const Text('🪔', style: TextStyle(fontSize: 28)),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_poojaName,
-                            style: AppTextStyles.headingSmall),
-                        Text('with $_panditName',
-                            style: AppTextStyles.bodySmall),
-                      ],
-                    ),
-                  ],
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Divider(color: AppColors.divider),
-                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.borderLight.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.04),
+                    blurRadius: 30,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with lotus
+                  Row(
+                    children: [
+                      const Text('🪔', style: TextStyle(fontSize: 28)),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_poojaName,
+                              style: AppTextStyles.headingSmall),
+                          Text('with $_panditName',
+                              style: AppTextStyles.bodySmall),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Divider(color: AppColors.divider),
+                  ),
 
-                // Details
-                _SummaryRow(
-                    icon: Icons.calendar_month_rounded,
-                    label: 'Date',
-                    value: '18 Feb 2025'),
-                const SizedBox(height: 10),
-                _SummaryRow(
-                    icon: Icons.schedule_rounded,
-                    label: 'Time',
-                    value: '9:00 AM - 11:00 AM'),
-                const SizedBox(height: 10),
-                _SummaryRow(
-                    icon: Icons.auto_awesome_rounded,
-                    label: 'Gotram',
-                    value: _selectedGotram ?? 'Not specified'),
-                const SizedBox(height: 10),
-                _SummaryRow(
-                    icon: Icons.location_on_rounded,
-                    label: 'Address',
-                    value: _addressController.text.isNotEmpty
-                        ? _addressController.text
-                        : '123, Jubilee Hills, Hyderabad'),
+                  // Details
+                  _SummaryRow(
+                      icon: Icons.calendar_month_rounded,
+                      label: 'Date',
+                      value: '18 Feb 2025'),
+                  const SizedBox(height: 10),
+                  _SummaryRow(
+                      icon: Icons.schedule_rounded,
+                      label: 'Time',
+                      value: '9:00 AM - 11:00 AM'),
+                  const SizedBox(height: 10),
+                  _SummaryRow(
+                      icon: Icons.auto_awesome_rounded,
+                      label: 'Gotram',
+                      value: _selectedGotram ?? 'Not specified'),
+                  const SizedBox(height: 10),
+                  _SummaryRow(
+                      icon: Icons.location_on_rounded,
+                      label: 'Address',
+                      value: _addressController.text.isNotEmpty
+                          ? _addressController.text
+                          : '123, Jubilee Hills, Hyderabad'),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Divider(color: AppColors.divider),
-                ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Divider(color: AppColors.divider),
+                  ),
 
-                // Price breakdown
-                _PriceRow(
-                    label: 'Pooja Charges',
-                    amount: _basePrice),
-                const SizedBox(height: 8),
-                _PriceRow(
-                    label: 'Platform Fee', amount: (_basePrice * 0.05).toInt()),
-                const SizedBox(height: 8),
-                _PriceRow(label: 'Taxes', amount: (_basePrice * 0.05).toInt()),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Divider(color: AppColors.divider),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Total Amount',
-                        style: AppTextStyles.headingSmall),
-                    Text(
-                      '₹${(_basePrice * 1.1).toInt()}',
-                      style: AppTextStyles.priceLarge
-                          .copyWith(color: AppColors.primary),
-                    ),
-                  ],
-                ),
-              ],
+                  // Price breakdown
+                  _PriceRow(
+                      label: 'Pooja Charges',
+                      amount: _basePrice),
+                  const SizedBox(height: 8),
+                  _PriceRow(
+                      label: 'Platform Fee', amount: (_basePrice * 0.05).toInt()),
+                  const SizedBox(height: 8),
+                  _PriceRow(label: 'Taxes', amount: (_basePrice * 0.05).toInt()),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Divider(color: AppColors.divider),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total Amount',
+                          style: AppTextStyles.headingSmall),
+                      Text(
+                        '₹${(_basePrice * 1.1).toInt()}',
+                        style: AppTextStyles.priceLarge
+                            .copyWith(color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 28),
 
           // Proceed to pay
-          ElevatedButton(
-            onPressed: () {
+          _AnimatedActionButton(
+            label: 'Proceed to Pay',
+            icon: Icons.lock_rounded,
+            onTap: () {
               context.push(AppRoutes.payment, extra: {
                 'amount': (_basePrice * 1.1).toInt(),
                 'panditName': _panditName,
                 'poojaName': _poojaName,
               });
             },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 54),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.lock_rounded, size: 18),
-                const SizedBox(width: 8),
-                Text('Proceed to Pay', style: AppTextStyles.buttonText),
-              ],
-            ),
           ),
           const SizedBox(height: 12),
 
@@ -373,6 +418,88 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     );
   }
 }
+
+class _AnimatedActionButton extends StatefulWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _AnimatedActionButton({
+    required this.label,
+    this.icon,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedActionButton> createState() => _AnimatedActionButtonState();
+}
+
+class _AnimatedActionButtonState extends State<_AnimatedActionButton> with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      lowerBound: 0.0,
+      upperBound: 0.04,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _scaleController.forward(),
+      onTapUp: (_) {
+        _scaleController.reverse();
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onTapCancel: () => _scaleController.reverse(),
+      child: AnimatedBuilder(
+        animation: _scaleController,
+        builder: (context, child) => Transform.scale(
+          scale: 1.0 - _scaleController.value,
+          child: child,
+        ),
+        child: Container(
+          width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
+              ],
+              Text(widget.label, style: AppTextStyles.buttonText),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class _SummaryRow extends StatelessWidget {
   final IconData icon;
